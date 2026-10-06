@@ -80,6 +80,13 @@ export class Git {
     }
   }
 
+  branchExists(branch: string): boolean {
+    const local = ok(this.run, "git", ["rev-parse", "--verify", "--quiet", `refs/heads/${branch}`]);
+    return (
+      local || this.run("git", ["ls-remote", "--heads", "origin", `refs/heads/${branch}`]) !== ""
+    );
+  }
+
   remoteTagExists(tag: string): boolean {
     return this.run("git", ["ls-remote", "--tags", "origin", `refs/tags/${tag}`]) !== "";
   }

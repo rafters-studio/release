@@ -32,13 +32,16 @@ export function prepare(cwd: string, target: string): PrepareResult {
   if (git.tagSha(tag) !== null || git.remoteTagExists(tag))
     throw new Error(`tag ${tag} already exists`);
 
+  const branch = `release/${tag}`;
+  if (git.branchExists(branch))
+    throw new Error(`branch ${branch} already exists locally or on origin; delete it first`);
+
   const changelog = checkChangelog(project, to);
   const dirty = git.dirty().filter((file) => file !== changelog);
   if (dirty.length > 0)
     throw new Error(`uncommitted changes besides ${changelog}:\n  ${dirty.join("\n  ")}`);
 
   const files = [...applyVersion(project, to), changelog];
-  const branch = `release/${tag}`;
   git.commitRelease(branch, files, `chore(release): ${tag}\n`);
   return { from: project.version, to, branch, files };
 }

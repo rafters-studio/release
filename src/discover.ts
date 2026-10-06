@@ -25,6 +25,9 @@ export interface Project {
 }
 
 const MARKER = "release-version";
+// A marked line ends with the marker as a comment: `// release-version`, `# release-version`, or `/* release-version */`.
+const MARKED_LINE = /(?:\/\/|#)\s*release-version\s*$|\/\*\s*release-version\s*\*\/\s*$/;
+export const isMarkedLine = (line: string): boolean => MARKED_LINE.test(line);
 const SOURCE_EXTENSIONS = /\.(ts|tsx|mts|cts|js|mjs|cjs)$/;
 
 function readJson(path: string): Record<string, unknown> {
@@ -40,22 +43,29 @@ function stringField(obj: Record<string, unknown>, key: string): string | undefi
   return typeof value === "string" ? value : undefined;
 }
 
-// Workspace package globs from pnpm-workspace.yaml or package.json "workspaces".
+const unquote = (item: string): string => item.trim().replace(/^["']|["']$/g, "");
+
+// Workspace package globs from pnpm-workspace.yaml (block or flow list) or package.json "workspaces".
 function workspaceGlobs(root: string, rootPkg: Record<string, unknown>): string[] {
   const pnpm = join(root, "pnpm-workspace.yaml");
   if (existsSync(pnpm)) {
     const globs: string[] = [];
     let inPackages = false;
-    for (const line of readFileSync(pnpm, "utf8").split("\n")) {
-      if (/^packages\s*:/.test(line)) {
+    for (const raw of readFileSync(pnpm, "utf8").split("\n")) {
+      const line = raw.replace(/\s+#.*$/, "");
+      const flow = /^packages\s*:\s*\[(.*)\]\s*$/.exec(line);
+      if (flow) {
+        globs.push(...(flow[1] ?? "").split(",").map(unquote).filter(Boolean));
+        continue;
+      }
+      if (/^packages\s*:\s*$/.test(line)) {
         inPackages = true;
         continue;
       }
-      if (inPackages) {
-        const item = /^\s+-\s+["']?([^"'#]+?)["']?\s*(#.*)?$/.exec(line);
-        if (item?.[1]) globs.push(item[1]);
-        else if (/^\S/.test(line)) inPackages = false;
-      }
+      if (!inPackages || /^\s*(#.*)?$/.test(line)) continue;
+      const item = /^\s*-\s+(.+)$/.exec(line);
+      if (item?.[1]) globs.push(unquote(item[1]));
+      else if (/^\S/.test(line)) inPackages = false;
     }
     if (globs.length > 0) return globs;
   }
@@ -80,6 +90,11 @@ function expandGlobs(root: string, globs: string[]): string[] {
   for (const raw of globs) {
     const negate = raw.startsWith("!");
     const glob = (negate ? raw.slice(1) : raw).replace(/\/$/, "");
+    if (glob.replace(/\/\*\*?$/, "").includes("*")) {
+      throw new Error(
+        `workspace glob "${raw}" is not supported (use an exact path, dir/*, or dir/**)`,
+      );
+    }
     const into = negate ? excluded : included;
     if (glob.endsWith("/**")) {
       walkDirs(join(root, glob.slice(0, -3)), (dir) => into.add(relative(root, dir)));
@@ -184,9 +199,9 @@ export function discover(root: string): Project {
     const name = file.split("/").pop();
     // A private or out-of-workspace package that carries the project's version moves with it.
     if (name === "package.json" && !counted.has(file) && !file.includes("node_modules/")) {
-      if (stringField(readJson(join(root, file)), "version") === version) {
-        targets.push({ file, kind: "package", occurrences: 1 });
-      }
+      const other = stringField(readJson(join(root, file)), "version");
+      if (other === version) targets.push({ file, kind: "package", occurrences: 1 });
+      else if (other !== undefined) untracked.push({ file, version: other });
       continue;
     }
     const inClaudePlugin = file.includes(".claude-plugin/");
@@ -210,7 +225,8 @@ export function discover(root: string): Project {
     } else if (SOURCE_EXTENSIONS.test(file)) {
       const text = readFileSync(join(root, file), "utf8");
       if (!text.includes(MARKER)) continue;
-      const lines = text.split("\n").filter((line) => line.includes(MARKER));
+      const lines = text.split("\n").filter(isMarkedLine);
+      if (lines.length === 0) continue;
       const occurrences = lines.reduce((n, line) => n + count(line, sourcePattern(version)), 0);
       if (occurrences === 0) {
         throw new Error(`${file} marks a line ${MARKER} but no quoted ${version} is on it`);

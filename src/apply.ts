@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  isMarkedLine,
   type Project,
   type Target,
   skillPattern,
@@ -35,9 +36,7 @@ function rewrite(
   }
   const lines = text
     .split("\n")
-    .map((line) =>
-      line.includes("release-version") ? line.replace(sourcePattern(from), swap) : line,
-    );
+    .map((line) => (isMarkedLine(line) ? line.replace(sourcePattern(from), swap) : line));
   return { text: lines.join("\n"), replaced };
 }
 

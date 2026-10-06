@@ -34,6 +34,14 @@ describe("prepare", () => {
     expect(() => prepare(root, "patch")).toThrow(/uncommitted changes besides CHANGELOG.md/);
   });
 
+  it("refuses an existing release branch before writing anything", () => {
+    const root = single();
+    git(root, "branch", "release/v1.0.1");
+    write(root, { "CHANGELOG.md": "# solo\n\n## 1.0.1\n" });
+    expect(() => prepare(root, "patch")).toThrow(/branch release\/v1.0.1 already exists/);
+    expect(git(root, "diff", "--name-only")).toBe("CHANGELOG.md");
+  });
+
   it("refuses an existing tag", () => {
     const root = single();
     git(root, "tag", "v1.0.1");

@@ -23,7 +23,7 @@ release finish <x.y.z> [--wait]     # tag the commit where it landed, push the t
 A release, start to finish:
 
 1. Write the changelog section for the new version (`## 1.4.0` at the top of `CHANGELOG.md`). Agents on a legion team use legion's changelog agent, which writes it from what merged since the last tag.
-2. On an up-to-date default branch, run `release minor`. It refuses unless the changelog leads with `## 1.4.0`, the only uncommitted change is that changelog, the version increases, and the tag `v1.4.0` does not exist yet. Then it writes the version, commits `chore(release): v1.4.0` on `release/v1.4.0`, and pushes the branch.
+2. On an up-to-date default branch, run `release minor`. It refuses unless the changelog leads with `## 1.4.0`, the only uncommitted change is that changelog, the version increases, and neither the tag `v1.4.0` nor the branch `release/v1.4.0` exists yet. Then it writes the version, commits `chore(release): v1.4.0` on `release/v1.4.0`, and pushes the branch.
 3. Open a PR for `release/v1.4.0` and merge it like any other change.
 4. Run `release finish 1.4.0` (or `release finish 1.4.0 --wait` to wait for the merge queue). It finds the commit on the default branch that set the version, tags it `v1.4.0`, and pushes only the tag. Running it again pushes the same tag again; it refuses if the tag already points somewhere else.
 
@@ -43,7 +43,9 @@ One version per project. Every place that carries it moves together:
 
 The publishable packages must already share one version; `release status` lists them if they do not. Files at a different version (a skill that versions itself, a private package at `0.0.x`) are left alone and listed. A dependency on `workspace:*` or `catalog:` is never touched.
 
-To keep a version constant in source, mark the line:
+Workspace globs may be exact paths, `dir/*`, or `dir/**`, optionally negated with `!`; any other form is refused rather than guessed at.
+
+To keep a version constant in source, end the line with a `release-version` comment (`//`, `#`, or `/* */`); a file that only mentions the word is ignored:
 
 ```ts
 export const VERSION = "1.4.0"; // release-version

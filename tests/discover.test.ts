@@ -40,7 +40,13 @@ describe("discover", () => {
       "plugin/skills/x/SKILL.md:skill:1",
       "tools/meta/package.json:package:1",
     ]);
-    expect(p.untracked).toEqual([{ file: "other/.claude-plugin/plugin.json", version: "3.1.0" }]);
+    expect(p.untracked).toEqual(
+      expect.arrayContaining([
+        { file: "other/.claude-plugin/plugin.json", version: "3.1.0" },
+        { file: "packages/ui/package.json", version: "0.0.7" },
+        { file: "package.json", version: "0.0.0" },
+      ]),
+    );
   });
 
   it("works for a single package with no workspace", () => {
@@ -55,6 +61,41 @@ describe("discover", () => {
       "packages/b/package.json": pkg("b", "1.1.0"),
     });
     expect(() => discover(root)).toThrow(/do not share one version/);
+  });
+
+  it("ignores a file that only mentions the marker word", () => {
+    const root = project({
+      "package.json": pkg("a", "1.0.0"),
+      "src/doc.ts": 'const MARKER = "release-version"; // the marker comment\n',
+    });
+    expect(discover(root).targets.map((t) => t.file)).toEqual(["package.json"]);
+  });
+
+  it("reads zero-indent and flow pnpm workspace lists", () => {
+    const files = {
+      "package.json": pkg("root", "0.0.0", { private: true }),
+      "packages/a/package.json": pkg("a", "2.0.0"),
+      "packages/b/package.json": pkg("b", "2.0.0"),
+    };
+    const zero = project({ ...files, "pnpm-workspace.yaml": 'packages:\n- "packages/*"\n' });
+    const flow = project({
+      ...files,
+      "pnpm-workspace.yaml": "packages: [packages/a, 'packages/b']\n",
+    });
+    for (const root of [zero, flow]) {
+      expect(
+        discover(root)
+          .targets.map((t) => t.file)
+          .sort(),
+      ).toEqual(["packages/a/package.json", "packages/b/package.json"]);
+    }
+  });
+
+  it("refuses a workspace glob form it does not support", () => {
+    const root = project({
+      "package.json": pkg("root", "0.0.0", { private: true, workspaces: ["packages/**/lib"] }),
+    });
+    expect(() => discover(root)).toThrow(/not supported/);
   });
 
   it("refuses a release-version marker with no version on the line", () => {
