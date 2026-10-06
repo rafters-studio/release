@@ -1,5 +1,9 @@
 # @rafters/release
 
+## 0.1.1
+
+The first version published to npm, from the tag workflow through trusted publishing with provenance. No code changes since 0.1.0, which was tagged but never published.
+
 ## 0.1.0
 
 The first release: one command takes any TypeScript project from merged work to a pushed version tag, with no config file and no shell scripts. Publishing stays in the project's own tag-triggered workflow.
