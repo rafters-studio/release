@@ -1,27 +1,16 @@
-<!--VITE PLUS START-->
+# release
 
-# Using Vite+, the Unified Toolchain for the Web
+Takes a TypeScript project from merged work to a pushed version tag: sets the version everywhere it appears, gets the changelog written from what merged, sends the release through the normal review and merge path, and tags the commit that lands. It does not publish; the tag triggers the project's own workflow. Owned by the platform agent.
 
-This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+If you are part of a legion team, orient through legion before reading anything here:
 
-Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+```
+legion whoami --repo platform          # who owns this repo
+legion whatami --repo platform         # how platform works
+legion recall --repo release           # what release remembers about the task at hand
+legion sym ...                         # code questions: definitions, references
+```
 
-## Built-in Commands vs Scripts
+The intent is legion document 01a10f09-0fcb-7e62-9c3e-bd0d7ee485ce (surface release).
 
-`vp <name>` runs a built-in command. `vp run <name>` runs a `package.json` script or a `vite.config.ts` task. Scripts cannot overwrite built-ins, so `vp dev` and `vp run dev` may do different things. Check `package.json` and `vite.config.ts` first, and run `vp run <name>` when the project defines a script or task with that name.
-
-## Tool Versions
-
-Run `vp toolchain` to show versions and relationships in the active Vite+
-release. Add a tool name to select part of the graph. For example, run
-`vp toolchain vite`. Use `--global` to ignore the local `vite-plus` package. Use
-`vp why <package>` to show the package-manager dependency graph.
-
-## Review Checklist
-
-- [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
-- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
-- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
-
-<!--VITE PLUS END-->
+Toolchain: Vite+ (`vp`). Run `vp install` after pulling, and `vp check` and `vp test` before committing.
