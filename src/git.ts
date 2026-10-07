@@ -91,9 +91,12 @@ export class Git {
     return this.run("git", ["ls-remote", "--tags", "origin", `refs/tags/${tag}`]) !== "";
   }
 
-  // Newest first: commits on `ref` that touched `file`.
+  // Newest first: commits on `ref`'s first-parent history that touched `file`. A merged
+  // branch shows up as its merge commit, never as the commits it carried.
   commitsTouching(ref: string, file: string): string[] {
-    return this.run("git", ["log", "--format=%H", ref, "--", file]).split("\n").filter(Boolean);
+    return this.run("git", ["log", "--first-parent", "--format=%H", ref, "--", file])
+      .split("\n")
+      .filter(Boolean);
   }
 
   show(sha: string, file: string): string {

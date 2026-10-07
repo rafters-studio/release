@@ -91,6 +91,33 @@ describe("finish", () => {
     });
   });
 
+  it("tags the merge commit of a release PR that carries a later commit", () => {
+    const root = single();
+    write(root, { "CHANGELOG.md": "# solo\n\n## 1.0.1\n" });
+    prepare(root, "patch");
+    write(root, { "CHANGELOG.md": "# solo\n\n## 1.0.1\n\n- late fix\n" });
+    git(root, "commit", "--quiet", "-am", "docs: late changelog line");
+    const late = git(root, "rev-parse", "HEAD");
+    git(root, "switch", "--quiet", "main");
+    git(root, "merge", "--quiet", "--no-ff", "-m", "Merge release", "release/v1.0.1");
+    const merge = git(root, "rev-parse", "HEAD");
+    git(root, "push", "--quiet", "origin", "main");
+    expect(finish(root, "1.0.1")).toMatchObject({ state: "tagged", sha: merge });
+    git(root, "merge-base", "--is-ancestor", late, "v1.0.1");
+  });
+
+  it("tags the squash commit of a squash-merged release PR", () => {
+    const root = single();
+    write(root, { "CHANGELOG.md": "# solo\n\n## 1.0.1\n" });
+    prepare(root, "patch");
+    git(root, "switch", "--quiet", "main");
+    git(root, "merge", "--quiet", "--squash", "release/v1.0.1");
+    git(root, "commit", "--quiet", "-m", "chore(release): v1.0.1 (#1)");
+    const squash = git(root, "rev-parse", "HEAD");
+    git(root, "push", "--quiet", "origin", "main");
+    expect(finish(root, "1.0.1")).toMatchObject({ state: "tagged", sha: squash });
+  });
+
   it("refuses when the tag points at another commit", () => {
     const { root } = landed();
     git(root, "tag", "v1.0.1", "HEAD");
