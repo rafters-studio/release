@@ -1,6 +1,8 @@
-catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-  vite-plus: 1.0.0
+catalogMode: strict
+configDependencies:
+  "@rafters/toolchain": 0.1.1
+minimumReleaseAgeExclude:
+  - "@rafters/toolchain@0.1.1"
 overrides:
   vite@*: "catalog:"
 peerDependencyRules:
