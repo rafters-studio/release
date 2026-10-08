@@ -7,19 +7,6 @@ on:
   merge_group:
 
 jobs:
-  check:
-    name: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v6.0.10
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24.12
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec vp check
-      - run: pnpm exec vp test
-      - run: pnpm run build
+  ci:
+    name: ci
+    uses: rafters-studio/toolchain/.github/workflows/ts-ci.yml@v0.1.1

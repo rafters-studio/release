@@ -36,8 +36,10 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
-    "typescript": "^7.0.2",
+    "@cucumber/cucumber": "catalog:",
+    "@rafters/toolchain": "0.1.1",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
   "engines": {
