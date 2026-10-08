@@ -40,14 +40,8 @@
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.9.1",
-      "onFail": "download"
-    }
-  },
   "engines": {
     "node": ">=22.18.0"
-  }
+  },
+  "packageManager": "pnpm@12.9.1"
 }
