@@ -1,6 +1,6 @@
 {
   "name": "@rafters/release",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Release any TypeScript project from merged work to a pushed version tag, with no config.",
   "homepage": "https://github.com/rafters-studio/release#readme",
   "bugs": {

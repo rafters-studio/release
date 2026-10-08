@@ -1,5 +1,11 @@
 # @rafters/release
 
+## 0.1.2
+
+### Fixed
+
+- `release finish` tags the merge commit that landed the release, not the version commit on the release branch, so the tag holds every fix pushed to the release PR after the version was set. (#13)
+
 ## 0.1.1
 
 The first version published to npm, from the tag workflow through trusted publishing with provenance. No code changes since 0.1.0, which was tagged but never published.
